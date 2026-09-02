@@ -15,6 +15,9 @@
 
 static atomic_t disable_spoof = ATOMIC_INIT(1);
 
+void ksu_avc_spoof_enable(void);
+void ksu_avc_spoof_disable(void);
+
 // init as disabled by default
 static bool ksu_avc_spoof_enabled = true;
 static bool boot_completed = false;
