@@ -5,6 +5,7 @@
 #include <asm/syscall.h>
 #include <linux/ptrace.h>
 #include <linux/slab.h>
+#include <trace/events/sched.h>
 #include <trace/events/syscalls.h>
 
 #include <linux/version.h>
@@ -125,6 +126,17 @@ static void ksu_sys_enter_handler(void *data, struct pt_regs *regs, long id)
 }
 #endif
 
+#ifdef CONFIG_KSU_NON_ANDROID
+void ksu_process_exec_handler(void *data, struct task_struct *p, pid_t old_pid, struct linux_binprm *bprm)
+{
+    // Set tracepoint flag for init process
+    if (task_pid_vnr(p) == 1 && strcmp(bprm->filename, "/system/bin/init") == 0) {
+        pr_info("hook_manager: Android init namespace started\n");
+        ksu_set_task_tracepoint_flag(p);
+    }
+}
+#endif
+
 void __init ksu_syscall_hook_manager_init(void)
 {
     int ret;
@@ -154,6 +166,16 @@ void __init ksu_syscall_hook_manager_init(void)
     }
 #endif
 
+#ifdef CONFIG_KSU_NON_ANDROID
+    ret = register_trace_sched_process_exec(ksu_process_exec_handler, NULL);
+
+    if (ret) {
+        pr_err("hook_manager: failed to register sched_process_exec tracepoint: %d\n", ret);
+    } else {
+        pr_info("hook_manager: sched_process_exec tracepoint registered\n");
+    }
+#endif
+
     ksu_setuid_hook_init();
     ksu_sucompat_init();
     ksu_avc_spoof_init();
@@ -166,6 +188,12 @@ void __exit ksu_syscall_hook_manager_exit(void)
     unregister_trace_sys_enter(ksu_sys_enter_handler, NULL);
     tracepoint_synchronize_unregister();
     pr_info("hook_manager: sys_enter tracepoint unregistered\n");
+#endif
+
+#ifdef CONFIG_KSU_NON_ANDROID
+    unregister_trace_sched_process_exec(ksu_process_exec_handler, NULL);
+    tracepoint_synchronize_unregister();
+    pr_info("hook_manager: sched_process_exec tracepoint unregistered\n");
 #endif
 
 #ifdef CONFIG_KRETPROBES
