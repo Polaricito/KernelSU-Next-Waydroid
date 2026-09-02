@@ -21,4 +21,5 @@ int ksu_install_fd(void);
 
 void ksu_supercalls_init(void);
 void ksu_supercalls_exit(void);
+void ksu_supercalls_reset(void);
 #endif // __KSU_H_SUPERCALL
