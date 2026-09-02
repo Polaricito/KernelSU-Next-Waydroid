@@ -112,6 +112,15 @@ $(info -- KernelSU-Next Git repo detected at: $(GIT_ROOT))
 endif
 endif
 
+# Honor an externally-provided KSU_GIT_VERSION (e.g. DKMS builds where the
+# source tree is not a git repository), otherwise use the git-derived one.
+ifndef KSU_GIT_VERSION_VALID
+ifneq ($(KSU_GIT_VERSION),)
+KSU_GIT_VERSION_VALID := 1
+$(info -- KernelSU-Next version from external KSU_GIT_VERSION: $(KSU_GIT_VERSION))
+endif
+endif
+
 # Calculate version if git version is available
 ifdef KSU_GIT_VERSION_VALID
 # ksu_version: major * 30000 + git version for historical reasons
