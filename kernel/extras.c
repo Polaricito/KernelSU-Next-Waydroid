@@ -13,15 +13,9 @@
 // theres only one feature so far anyway
 // - xx, 20251019
 
-static u32 su_sid = 0;
-static u32 priv_app_sid = 0;
-
-// init as disabled by default
 static atomic_t disable_spoof = ATOMIC_INIT(1);
 
-void ksu_avc_spoof_enable();
-void ksu_avc_spoof_disable();
-
+// init as disabled by default
 static bool ksu_avc_spoof_enabled = true;
 static bool boot_completed = false;
 
@@ -61,6 +55,10 @@ static const struct ksu_feature_handler avc_spoof_handler = {
 	.get_handler = avc_spoof_feature_get,
 	.set_handler = avc_spoof_feature_set,
 };
+
+#ifdef CONFIG_KSU_SELINUX
+static u32 su_sid = 0;
+static u32 priv_app_sid = 0;
 
 static int get_sid()
 {
@@ -170,7 +168,7 @@ void ksu_avc_spoof_disable(void)
 	pr_info("avc_spoof/exit: slow_avc_audit spoofing disabled!\n");
 }
 
-void ksu_avc_spoof_enable(void) 
+void ksu_avc_spoof_enable(void)
 {
 	int ret = get_sid();
 	if (ret) {
@@ -181,18 +179,30 @@ void ksu_avc_spoof_enable(void)
 #ifdef CONFIG_KPROBES
 	pr_info("avc_spoof/init: register slow_avc_audit kprobe!\n");
 	slow_avc_audit_kp = init_kprobe("slow_avc_audit", slow_avc_audit_pre_handler);
-#endif	
+#endif
 	// once we get the sids, we can now enable the hook handler
 	atomic_set(&disable_spoof, 0);
-	
+
 	pr_info("avc_spoof/init: slow_avc_audit spoofing enabled!\n");
 }
+#else
+void ksu_avc_spoof_disable(void)
+{
+	atomic_set(&disable_spoof, 1);
+	pr_info("avc_spoof/slow_avc_audit spoofing disabled (no SELinux)\n");
+}
+
+void ksu_avc_spoof_enable(void)
+{
+	pr_info("avc_spoof/init: spoofing unavailable without SELinux\n");
+}
+#endif
 
 void ksu_avc_spoof_late_init(void)
 {
 	boot_completed = true;
-	
-    if (ksu_avc_spoof_enabled) {
+
+	if (ksu_avc_spoof_enabled) {
 		ksu_avc_spoof_enable();
 	}
 }

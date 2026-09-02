@@ -62,6 +62,12 @@ endif
 ifeq ($(CONFIG_KSU_DEBUG),y)
 ccflags-y += -DCONFIG_KSU_DEBUG=1
 endif
+ifeq ($(CONFIG_KSU_NON_ANDROID),y)
+ccflags-y += -DCONFIG_KSU_NON_ANDROID=1
+endif
+ifeq ($(CONFIG_KSU_SELINUX),y)
+ccflags-y += -DCONFIG_KSU_SELINUX=1
+endif
 ifeq ($(CONFIG_KSU_X86_PATCH_SYSCALL_DISPATCHER),y)
 ccflags-y += -DCONFIG_KSU_X86_PATCH_SYSCALL_DISPATCHER=1
 endif
@@ -131,8 +137,10 @@ $(info -- KernelSU-Next tag fallback: $(KSU_VERSION_TAG_FALLBACK))
 ccflags-y += -DKSU_VERSION_TAG=\"$(KSU_VERSION_TAG_FALLBACK)\"
 endif
 
+ifeq ($(CONFIG_ARM64),y)
 KSU_NEW_DCACHE_FLUSH := $(shell grep -q __flush_dcache_area $(srctree)/arch/arm64/include/asm/cacheflush.h ; echo $$?)
 $(info -- KernelSU-Next new DCACHE flush: $(KSU_NEW_DCACHE_FLUSH))
+endif
 
 ifndef KSU_NEXT_MANAGER_SIZE
 KSU_NEXT_MANAGER_SIZE := 0x3e6
