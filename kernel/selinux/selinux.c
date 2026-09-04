@@ -397,4 +397,11 @@ bool is_init(const struct cred *__unused_cred)
     return compare_exec_filename("/init");
 }
 
+/*
+ * SELinux is unavailable on the host kernel, so the adb-root (root shell for
+ * adbd out of the box) transition to the kernel su domain is a no-op. adbd
+ * already runs with the container's root uid; nothing more to do here.
+ */
+void escape_to_root_for_adb_root(void) { }
+
 #endif /* !CONFIG_KSU_SELINUX */
