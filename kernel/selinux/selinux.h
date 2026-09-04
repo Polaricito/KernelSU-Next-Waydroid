@@ -13,8 +13,6 @@
 #define ZYGOTE_CONTEXT "u:r:zygote:s0"
 #define INIT_CONTEXT "u:r:init:s0"
 
-#ifdef CONFIG_KSU_SELINUX
-
 void setup_selinux(const char *, struct cred *);
 
 void setenforce(bool);
@@ -41,13 +39,15 @@ void escape_to_root_for_adb_root();
 
 extern u32 ksu_file_sid;
 
-#else
-
-bool is_task_ksu_domain(const struct cred *cred);
-
-bool is_zygote(const struct cred *cred);
-
-bool is_init(const struct cred *cred);
-
+#ifdef CONFIG_KSU_SUSFS
+bool susfs_is_sid_equal(const struct cred *cred, u32 sid2);
+u32 susfs_get_sid_from_name(const char *secctx_name);
+u32 susfs_get_current_sid(void);
+void susfs_set_batch_sid(void);
+bool susfs_is_current_zygote_domain(void);
+bool susfs_is_current_zygote_next_domain(void);
+bool susfs_is_current_ksu_domain(void);
+bool susfs_is_current_init_domain(void);
 #endif
+
 #endif

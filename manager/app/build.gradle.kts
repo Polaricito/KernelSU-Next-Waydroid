@@ -25,6 +25,11 @@ apksign {
 android {
     namespace = "com.rifsxd.ksunext"
 
+    defaultConfig {
+        versionCode = rootProject.extra["managerVersionCode"] as Int
+        versionName = rootProject.extra["managerVersionName"] as String
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -153,4 +158,5 @@ dependencies {
     implementation(libs.lsposed.cxx)
 
     implementation(libs.mmrl.ui)
+    implementation("androidx.biometric:biometric:1.2.0-alpha05")
 }

@@ -268,6 +268,17 @@ pub fn soft_reboot() -> Result<()> {
     if !status.success() {
         warn!("stop exited with status: {status}");
     }
+
+    // Wait for Zygote teardown to prevent injection race conditions
+    let rp = resetprop();
+    let timeout = Some(std::time::Duration::from_secs(2));
+    if sys_prop::get("init.svc.zygote").is_some() {
+        let _ = rp.wait("init.svc.zygote", Some("stopped"), timeout);
+    }
+    if sys_prop::get("init.svc.zygote_secondary").is_some() {
+        let _ = rp.wait("init.svc.zygote_secondary", Some("stopped"), timeout);
+    }
+
     info!("post-fs-data");
     on_post_data_fs()?;
     info!("start");
@@ -281,6 +292,16 @@ pub fn soft_reboot() -> Result<()> {
         warn!("wait for boot completed failed: {e}");
     }
     on_boot_completed();
+
+    // Workaround for wireless debugging dropping on soft reboot
+    if let Ok(out) = Command::new("settings").args(["get", "global", "adb_wifi_enabled"]).output() {
+        if String::from_utf8_lossy(&out.stdout).trim() == "1" {
+            info!("Kicking wireless debugging...");
+            let _ = Command::new("settings").args(["put", "global", "adb_wifi_enabled", "0"]).status();
+            std::thread::sleep(std::time::Duration::from_secs(1));
+            let _ = Command::new("settings").args(["put", "global", "adb_wifi_enabled", "1"]).status();
+        }
+    }
 
     unsafe {
         _exit(0);
