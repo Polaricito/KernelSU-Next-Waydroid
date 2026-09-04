@@ -140,7 +140,7 @@ int __init kernelsu_init(void)
 
 	ksu_init_symbol_resolver();
 
-#if !defined(CONFIG_KSU_SUSFS) && defined(CONFIG_KPROBES)
+#if (!defined(CONFIG_KSU_SUSFS) || defined(CONFIG_KSU_SUSFS_WAYDROID_SHIM)) && defined(CONFIG_KPROBES)
 	ksu_syscall_hook_init();
 #endif
 
@@ -148,7 +148,7 @@ int __init kernelsu_init(void)
 	ksu_sulog_init();
 	ksu_adb_root_init();
 
-#ifndef CONFIG_KSU_SUSFS
+#if !defined(CONFIG_KSU_SUSFS) || defined(CONFIG_KSU_SUSFS_WAYDROID_SHIM)
 #ifdef CONFIG_KPROBES
 	ksu_lsm_hook_init();
 #endif
@@ -161,7 +161,7 @@ int __init kernelsu_init(void)
 	ksu_supercalls_init();
 	ksu_app_profile_init();
 
-#ifdef CONFIG_KSU_SUSFS
+#if defined(CONFIG_KSU_SUSFS) && !defined(CONFIG_KSU_SUSFS_WAYDROID_SHIM)
 	ksu_sucompat_init();
 	ksu_setuid_hook_init();
 	ksu_avc_spoof_init();
@@ -184,7 +184,7 @@ int __init kernelsu_init(void)
 		ksu_allowlist_init();
 		ksu_load_allow_list();
 
-#if !defined(CONFIG_KSU_SUSFS) && defined(CONFIG_KPROBES)
+#if (!defined(CONFIG_KSU_SUSFS) || defined(CONFIG_KSU_SUSFS_WAYDROID_SHIM)) && defined(CONFIG_KPROBES)
 		ksu_syscall_hook_manager_init();
 #endif
 
@@ -210,7 +210,7 @@ int __init kernelsu_init(void)
 #endif
 
 	} else {
-#if !defined(CONFIG_KSU_SUSFS) && defined(CONFIG_KPROBES)
+#if (!defined(CONFIG_KSU_SUSFS) || defined(CONFIG_KSU_SUSFS_WAYDROID_SHIM)) && defined(CONFIG_KPROBES)
 		ksu_syscall_hook_manager_init();
 #endif
 
@@ -234,7 +234,7 @@ int __init kernelsu_init(void)
 void __exit kernelsu_exit(void)
 {
 	// Phase 1: Stop all hooks first to prevent new callbacks
-#if !defined(CONFIG_KSU_SUSFS) && defined(CONFIG_KPROBES)
+#if (!defined(CONFIG_KSU_SUSFS) || defined(CONFIG_KSU_SUSFS_WAYDROID_SHIM)) && defined(CONFIG_KPROBES)
 	ksu_syscall_hook_manager_exit();
 #endif
 
@@ -263,7 +263,7 @@ void __exit kernelsu_exit(void)
 	ksu_selinux_hide_exit();
 #endif
 
-#ifndef CONFIG_KSU_SUSFS
+#if !defined(CONFIG_KSU_SUSFS) || defined(CONFIG_KSU_SUSFS_WAYDROID_SHIM)
 #ifdef CONFIG_KPROBES
 	ksu_lsm_hook_exit();
 #endif

@@ -13,6 +13,8 @@
 #ifdef CONFIG_KSU_SUSFS
 extern struct static_key_false susfs_is_avc_log_spoofing_enabled;
 extern bool boot_completed;
+#else
+static bool boot_completed = false;
 #endif
 
 // sorry for the ifdef hell

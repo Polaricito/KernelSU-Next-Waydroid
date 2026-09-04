@@ -800,7 +800,9 @@ void ksu_ksud_exit()
     // TODO:
     // this should be done before unregister vfs_read_kp
     // stop_init_rc_hook();
+#ifndef CONFIG_KSU_NON_ANDROID
     unregister_kprobe(&input_event_kp);
+#endif
 #endif
 
     if (module_rc_buf) {

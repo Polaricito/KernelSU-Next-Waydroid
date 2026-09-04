@@ -18,8 +18,17 @@ kernelsu-objs += hook/$(KSU_ARCH)/patch_memory.o
 endif
 endif
 
-# Hooks (excluded for SuSFS)
+# Hooks (excluded for SuSFS, re-enabled for the loadable waydroid shim)
 ifneq ($(strip $(CONFIG_KSU_SUSFS)),y)
+ifeq ($(strip $(CONFIG_KPROBES)),y)
+kernelsu-objs += hook/syscall_event_bridge.o
+kernelsu-objs += hook/syscall_hook_manager.o
+kernelsu-objs += hook/tp_marker.o
+ifdef KSU_ARCH
+kernelsu-objs += hook/$(KSU_ARCH)/syscall_hook.o
+endif
+endif
+else ifeq ($(strip $(CONFIG_KSU_SUSFS_WAYDROID_SHIM)),y)
 ifeq ($(strip $(CONFIG_KPROBES)),y)
 kernelsu-objs += hook/syscall_event_bridge.o
 kernelsu-objs += hook/syscall_hook_manager.o
@@ -230,13 +239,17 @@ else
 $(info -- You have not integrated susfs in your kernel yet.)
 $(info -- Read: https://gitlab.com/simonpunk/susfs4ksu)
 endif
+endif
+
 # Waydroid load shim: provide inert stubs for kernel-side SUSFS symbols when
-# building against an un-patched host kernel.
+# building against an un-patched host kernel. Independent of CONFIG_KSU_SUSFS
+# so the working native hook chain (root + fd-install) stays enabled.
 ifeq ($(CONFIG_KSU_SUSFS_WAYDROID_SHIM),y)
 kernelsu-objs += susfs_shim.o
 ccflags-y += -I$(KSU_KERNEL_DIR)/include
+ccflags-y += -DCONFIG_KSU_SUSFS_WAYDROID_SHIM=1
 $(info -- Waydroid SUSFS load shim enabled (inert SUSFS symbols))
-endif
+$(info -- NOTE: CONFIG_KSU_SUSFS=$(CONFIG_KSU_SUSFS) => SUSFS features are inert)
 endif
 
 # Keep a new line here!! Because someone may append config

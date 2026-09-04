@@ -245,12 +245,6 @@ int ksu_handle_execveat_sucompat(int *fd, struct filename **filename_ptr,
     if (likely(memcmp(filename->name, su_path, sizeof(su_path))))
         return 0;
 
-    if (current_chrooted())
-    {
-        pr_err("ksu_handle_execveat_sucompat: su found but NOT allowed! Because current process is running in chrooted environment\n");
-        return 0;
-    }
-
     if (!ksu_is_allow_uid_for_current(current_uid().val))
         return 0;
 
@@ -313,11 +307,6 @@ int ksu_handle_faccessat(int *dfd, struct filename **filename,
 	if (likely(memcmp((*filename)->name, su_path, sizeof(su_path))))
 		return 0;
 
-	if (current_chrooted()) {
-		pr_err("ksu_handle_faccessat: su found but NOT allowed! Because current process is running in chrooted environment\n");
-		return 0;
-	}
-
 	if (!ksu_is_allow_uid_for_current(current_uid().val))
 		return 0;
 
@@ -357,11 +346,6 @@ int ksu_handle_stat(int *dfd, struct filename **filename, int *flags) {
 
 	if (likely(memcmp((*filename)->name, su_path, sizeof(su_path))))
 		return 0;
-
-	if (current_chrooted()) {
-		pr_err("ksu_handle_stat: su found but NOT allowed! Because current process is running in chrooted environment\n");
-		return 0;
-	}
 
 	if (!ksu_is_allow_uid_for_current(current_uid().val))
 		return 0;
@@ -416,10 +400,6 @@ long ksu_handle_faccessat_sucompat(int orig_nr, struct pt_regs *regs)
 	strncpy_from_user_nofault(path, *filename_user, sizeof(path));
 
 	if (unlikely(!memcmp(path, su_path, sizeof(su_path)))) {
-		if (current_chrooted()) {
-			pr_err("ksu_handle_faccessat_sucompat: su found but NOT allowed! Because current process is running in chrooted environment\n");
-			goto do_orig_facessat;
-		}
 		old_cred = override_creds(ksu_cred);
 		if (is_ksud_exists()) {
 			ksu_compat_sulog('a');
@@ -456,10 +436,6 @@ long ksu_handle_stat_sucompat(int orig_nr, struct pt_regs *regs)
 	strncpy_from_user_nofault(path, *filename_user, sizeof(path));
 
 	if (unlikely(!memcmp(path, su_path, sizeof(su_path)))) {
-		if (current_chrooted()) {
-			pr_err("ksu_handle_stat_sucompat: su found but NOT allowed! Because current process is running in chrooted environment\n");
-			goto do_orig_stat;
-		}
 		old_cred = override_creds(ksu_cred);
 		if (is_ksud_exists()) {
 			ksu_compat_sulog('s');
@@ -513,11 +489,6 @@ static long ksu_handle_execve_sucompat_common(const char __user **filename_user,
 
 	if (likely(memcmp(path, su_path, sizeof(su_path))))
 		goto do_orig_execve;
-
-	if (current_chrooted()) {
-		pr_err("ksu_handle_execve_sucompat: su found but NOT allowed! Because current process is running in chrooted environment\n");
-		goto do_orig_execve;
-	}
 
 	ksu_compat_sulog('x');
 	pr_info("sys_execve su found\n");
