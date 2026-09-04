@@ -1,10 +1,15 @@
 #include "selinux.h"
 #include "linux/cred.h"
 #include "linux/sched.h"
-#include "objsec.h"
 #include "linux/version.h"
+#include "linux/file.h"
+#include "linux/mm.h"
 #include "klog.h" // IWYU pragma: keep
 #include "ksu.h"
+
+#ifdef CONFIG_KSU_SELINUX
+
+#include "objsec.h"
 
 /*
  * Cached SID values for frequently checked contexts.
@@ -325,3 +330,71 @@ void susfs_set_batch_sid(void)
     susfs_set_sid(KERNEL_PRIV_APP_DOMAIN, &susfs_priv_app_sid);
 }
 #endif
+
+#else /* !CONFIG_KSU_SELINUX */
+
+/*
+ * Waydroid non-SELinux build + SUSFS load shim.
+ *
+ * SELinux is not available on the host kernel, so provide inert fallbacks
+ * for every SELinux/SUSFS helper the rest of the module may reference.
+ */
+
+#ifdef CONFIG_KSU_SUSFS
+u32 susfs_ksu_sid __read_mostly = 0;
+u32 susfs_init_sid __read_mostly = 0;
+u32 susfs_zygote_sid __read_mostly = 0;
+u32 susfs_zygote_next_sid __read_mostly = 0;
+u32 susfs_priv_app_sid __read_mostly = 0;
+
+bool susfs_is_sid_equal(const struct cred *cred, u32 sid2) { return false; }
+u32 susfs_get_sid_from_name(const char *secctx_name) { return 0; }
+u32 susfs_get_current_sid(void) { return 0; }
+bool susfs_is_current_zygote_domain(void) { return false; }
+bool susfs_is_current_zygote_next_domain(void) { return false; }
+bool susfs_is_current_ksu_domain(void) { return false; }
+bool susfs_is_current_init_domain(void) { return false; }
+void susfs_set_batch_sid(void) { }
+#endif
+
+static bool compare_exec_filename(const char *filename)
+{
+    struct file *exe_file;
+    bool result;
+    char *buf, *pathname;
+
+    buf = (char *)kzalloc(PATH_MAX, GFP_KERNEL);
+
+    if (!buf) {
+        pr_err("compare_exec_filename failed to allocate memory\n");
+        return false;
+    }
+
+    memset(buf, 0, PATH_MAX);
+
+    exe_file = get_mm_exe_file(current->mm);
+    pathname = exe_file ? d_path(&exe_file->f_path, buf, PATH_MAX) : NULL;
+    result = !!strstr(buf, filename);
+
+    if (pathname)
+        fput(exe_file);
+    kfree(buf);
+    return result;
+}
+
+bool is_task_ksu_domain(const struct cred *__unused_cred)
+{
+    return true;
+}
+
+bool is_zygote(const struct cred *__unused_cred)
+{
+    return compare_exec_filename("/app_process") || compare_exec_filename("/zygote");
+}
+
+bool is_init(const struct cred *__unused_cred)
+{
+    return compare_exec_filename("/init");
+}
+
+#endif /* !CONFIG_KSU_SELINUX */

@@ -734,6 +734,7 @@ static long ksu_sys_fstat(const struct pt_regs *regs)
 
     return ret;
 }
+#endif
 
 #ifndef CONFIG_KSU_NON_ANDROID
 static int input_handle_event_handler_pre(struct kprobe *p, struct pt_regs *regs)
@@ -789,6 +790,7 @@ void ksu_ksud_init()
     pr_info("ksud: input_event_kp: %d\n", ret);
 
     INIT_WORK(&stop_input_hook_work, do_stop_input_hook);
+#endif
 #endif
 }
 

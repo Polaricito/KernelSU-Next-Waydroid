@@ -10,6 +10,7 @@
 #ifdef CONFIG_KSU_SUSFS
 #include <linux/namei.h>
 #include <linux/susfs.h>
+#include <linux/susfs_def.h>
 extern struct work_struct susfs_extra_works;
 #endif
 #include "uapi/supercall.h"

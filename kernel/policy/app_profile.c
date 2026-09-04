@@ -9,6 +9,7 @@
 #include <linux/seccomp.h>
 #include <linux/slab.h>
 #include <linux/thread_info.h>
+#include <asm/thread_info.h>
 #include <linux/uidgid.h>
 #include <linux/version.h>
 
@@ -212,8 +213,10 @@ memcpy(&cred->cap_bset, &profile->capabilities.effective, sizeof(cred->cap_bset)
 
     commit_creds(cred);
 
+#ifdef TIF_SECCOMP
     if (likely(test_thread_flag(TIF_SECCOMP)))
         disable_seccomp();
+#endif
 
     if (profile->flags & FLAG_KSU_NO_NEW_PRIVS) {
         set_thread_flag(TIF_KSU_DISABLE_ESCAPE_WITH_ROOT);

@@ -24,7 +24,9 @@
 #include <linux/susfs_def.h>
 #include <linux/minmax.h>
 #include "selinux/selinux.h"
+#ifdef CONFIG_KSU_SELINUX
 #include "objsec.h"
+#endif
 #include "runtime/ksud.h"
 #endif
 

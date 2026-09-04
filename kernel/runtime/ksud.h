@@ -2,6 +2,7 @@
 #define __KSU_H_KSUD
 
 #include <asm/syscall.h>
+#include <linux/compat.h>
 
 #define KSUD_PATH "/data/adb/ksud"
 

@@ -86,6 +86,38 @@ endif
 ifeq ($(CONFIG_KSU_X86_PATCH_SYSCALL_DISPATCHER),y)
 ccflags-y += -DCONFIG_KSU_X86_PATCH_SYSCALL_DISPATCHER=1
 endif
+# SUSFS feature toggles (external-module builds define these as make vars;
+# translate each into a C -D so the #ifdef CONFIG_KSU_SUSFS_* code compiles)
+ifeq ($(strip $(CONFIG_KSU_SUSFS)),y)
+ccflags-y += -DCONFIG_KSU_SUSFS=1
+endif
+ifeq ($(CONFIG_KSU_SUSFS_SUS_PATH),y)
+ccflags-y += -DCONFIG_KSU_SUSFS_SUS_PATH=1
+endif
+ifeq ($(CONFIG_KSU_SUSFS_SUS_MOUNT),y)
+ccflags-y += -DCONFIG_KSU_SUSFS_SUS_MOUNT=1
+endif
+ifeq ($(CONFIG_KSU_SUSFS_SUS_KSTAT),y)
+ccflags-y += -DCONFIG_KSU_SUSFS_SUS_KSTAT=1
+endif
+ifeq ($(CONFIG_KSU_SUSFS_SPOOF_UNAME),y)
+ccflags-y += -DCONFIG_KSU_SUSFS_SPOOF_UNAME=1
+endif
+ifeq ($(CONFIG_KSU_SUSFS_ENABLE_LOG),y)
+ccflags-y += -DCONFIG_KSU_SUSFS_ENABLE_LOG=1
+endif
+ifeq ($(CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS),y)
+ccflags-y += -DCONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=1
+endif
+ifeq ($(CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG),y)
+ccflags-y += -DCONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=1
+endif
+ifeq ($(CONFIG_KSU_SUSFS_OPEN_REDIRECT),y)
+ccflags-y += -DCONFIG_KSU_SUSFS_OPEN_REDIRECT=1
+endif
+ifeq ($(CONFIG_KSU_SUSFS_SUS_MAP),y)
+ccflags-y += -DCONFIG_KSU_SUSFS_SUS_MAP=1
+endif
 endif
 
 ccflags-y += -I$(srctree)/security/selinux -I$(srctree)/security/selinux/include
@@ -197,6 +229,13 @@ $(info -- SUSFS_VERSION: $(SUSFS_VERSION))
 else
 $(info -- You have not integrated susfs in your kernel yet.)
 $(info -- Read: https://gitlab.com/simonpunk/susfs4ksu)
+endif
+# Waydroid load shim: provide inert stubs for kernel-side SUSFS symbols when
+# building against an un-patched host kernel.
+ifeq ($(CONFIG_KSU_SUSFS_WAYDROID_SHIM),y)
+kernelsu-objs += susfs_shim.o
+ccflags-y += -I$(KSU_KERNEL_DIR)/include
+$(info -- Waydroid SUSFS load shim enabled (inert SUSFS symbols))
 endif
 endif
 

@@ -44,6 +44,7 @@ void on_post_fs_data(void)
 #else
     ksu_stop_input_hook_runtime();
 #endif
+#endif
 #ifdef CONFIG_KSU_SELINUX
     ksu_selinux_hide_handle_post_fs_data();
 #endif
